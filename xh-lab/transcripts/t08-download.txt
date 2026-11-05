@@ -1,0 +1,42 @@
+$ ls -l ~/workspace/xh-for-mere-mortals/xh-lab/downloads/
+total 0
+$ (in that folder, output piped) xh --ignore-stdin --download :18092/download
+Packing list - bench order 12
+2x claw hammer
+1x tape measure
+4x wall plugs, 6 mm
+(a pipe is not a terminal, so the "download" writes the
+ body straight to stdout — the status line and the
+ progress messages went to stderr:)
+HTTP/1.1 200 OK
+Content-Disposition: attachment; filename="packing-list.txt"
+Content-Length: 81
+Content-Type: text/plain
+...
+Downloading 81 B to "<stdout>"
+Done. 81 B in 0.00019s (417.50 KiB/s)
+$ ls -l
+total 0
+(nothing on disk — the suggested filename is only used
+ when xh can see a terminal, or when you name the file)
+
+$ xh --ignore-stdin --download --output named-copy.txt :18092/download
+(on stderr: Downloading 81 B to "named-copy.txt" /
+ Done. 81 B in 0.00055s (142.94 KiB/s))
+$ ls -l named-copy.txt
+-rw-rw---- 1 root root 81 Nov  5 09:32 named-copy.txt
+
+$ ./pty-run.sh "xh --ignore-stdin --download http://127.0.0.1:18092/download" | ./render.sh | tail -4
+Server: BaseHTTP/0.6 Python/3.12.3
+
+Downloading 81 B to "packing-list.txt"
+(progress bar) 100% [####...####] 81 B ... ETA 0s
+Done. 81 B in 0.00037s (213.47 KiB/s)
+$ ls -l packing-list.txt; cat packing-list.txt
+-rw-rw---- 1 root root 81 Nov  5 09:32 packing-list.txt
+Packing list - bench order 12
+2x claw hammer
+1x tape measure
+4x wall plugs, 6 mm
+(on a terminal the file lands under the server's
+ suggested name, with a progress bar while it comes down)

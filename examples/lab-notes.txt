@@ -1,0 +1,78 @@
+The lab — one release binary, one echo server, no outside calls
+====================================================================
+
+The lab is xh as its project ships it: the
+official release binary, xh 0.25.3
+(xh-v0.25.3-x86_64-unknown-linux-musl.tar.gz
+from the ducaale/xh GitHub releases), run
+from a scratch folder on the build machine
+(an Ubuntu 24.04 sandbox) rather than
+installed system-wide. The same file,
+reached through two extra names —
+symlinks called `xhs` and `https` — is how
+the lab demonstrates the HTTPS-by-default
+variant. Companions: curl 8.5.0 (for the
+--curl chapter, where the printed
+translation is run for real) and
+Python 3.12.3.
+
+  * The fixture server (xh-lab/echo_server.py)
+    is a small standard-library Python
+    program listening on 127.0.0.1, port
+    18092. It answers every request with a
+    JSON report of what arrived — method,
+    path, the raw and parsed query string,
+    the headers in the order received, and
+    the body parsed as JSON, as a form, or
+    as multipart parts with a SHA-256 of
+    each part's bytes. Special paths give
+    it a one-line JSON body (/compact),
+    chosen status codes (/status/201,
+    /status/404, /status/500), a redirect
+    (/redirect), and a file download
+    (/download). Every request is also
+    logged to xh-lab/server-requests.log,
+    which is how the offline chapter proves
+    a negative: the log's line count does
+    not move.
+
+  * Fixtures written for the guide
+    (xh-lab/fixtures/): a one-line stock
+    label as plain text (label.txt), the
+    same stock note as a JSON object
+    (raw-note.json), and a three-row CSV
+    stock list (stock.csv). Nothing else is
+    uploaded, posted, or requested; every
+    request in every transcript goes to the
+    fixture server on this machine.
+
+  * Helpers (xh-lab/): render.sh strips
+    ANSI escape codes so terminal output
+    can be printed in a transcript;
+    pty-run.sh runs a command under a real
+    terminal via script(1) for the places
+    where pipe behaviour is not the whole
+    story.
+
+  * One setting runs through the whole
+    lab: XDG_CONFIG_HOME points at an empty
+    folder inside the lab (xh-lab/xdg), so
+    the session file chapter 8 examines
+    lands where the lab can show it, and
+    the machine's real configuration is
+    never touched.
+
+  * The lab's first surprise is in
+    transcript t12 and shapes every other
+    transcript: with stdin redirected —
+    even from /dev/null — xh reads it as a
+    request body, so a command that would
+    be a GET on a terminal becomes a POST
+    in a pipe, and request items are
+    refused outright. Every lab command
+    that is not about that behaviour
+    carries --ignore-stdin.
+
+All transcripts live in
+xh-lab/transcripts/, numbered t00 to t13
+in the order the chapters use them.

@@ -1,0 +1,23 @@
+(the fixture's /redirect answers 302 with
+ Location: /echo?via=redirect and no body)
+
+$ xh --ignore-stdin --headers :18092/redirect
+HTTP/1.1 302 Found
+Server: BaseHTTP/0.6 Python/3.12.3
+...
+Location: /echo?via=redirect
+(redirects are NOT followed by default — the 302 itself
+ is the answer you get, and with the default status
+ check it exits 3; see t07)
+
+$ xh --ignore-stdin --follow :18092/redirect | jq -c '{method, query}'
+{"method":"GET","query":{"via":["redirect"]}}
+(with --follow xh makes the second request itself, and
+ only the final answer is printed)
+
+$ xh --ignore-stdin --follow --all --headers :18092/redirect | grep -E 'HTTP|Location'
+HTTP/1.1 302 Found
+Location: /echo?via=redirect
+HTTP/1.1 200 OK
+(--all prints every response in the chain, not just
+ the last one)

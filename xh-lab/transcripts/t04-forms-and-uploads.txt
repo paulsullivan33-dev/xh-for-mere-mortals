@@ -1,0 +1,22 @@
+$ xh --ignore-stdin --form POST :18092/echo name=hammer count=3 | jq -c '{content_type, form}'
+{"content_type":"application/x-www-form-urlencoded","form":{"name":["hammer"],"count":["3"]}}
+(under --form every value is a string — count is "3",
+ not the number 3)
+
+$ sha256sum fixtures/label.txt fixtures/stock.csv
+128c42f6541337643f8d6d63288a5c1ac837232ffdf84827450dd4d511436f3c  fixtures/label.txt
+f940ba508633b46231bccfb6598dc721bee6af115b7c186477406102d1c8bb12  fixtures/stock.csv
+
+$ xh --ignore-stdin --multipart POST :18092/echo kind=restock label@fixtures/label.txt | jq -c .multipart
+[{"size":7,"sha256":"eeebb883f0f725c1111dc329930998f68b028f7b39f6046800dc480e7fc42456","name":"kind","text":"restock"},{"size":41,"sha256":"128c42f6541337643f8d6d63288a5c1ac837232ffdf84827450dd4d511436f3c","name":"label","filename":"label.txt","text":"BENCH-12 / claw hammer / restock shelf 4\n"}]
+(the file part's sha256 equals the source file's — the
+ upload arrived byte for byte)
+
+$ xh --ignore-stdin --form POST :18092/echo kind=restock sheet@fixtures/stock.csv | jq -c '{content_type, multipart}'
+{"content_type":"multipart/form-data; boundary=...","multipart":[{"size":7,"sha256":"eeebb883f0f725c1111dc329930998f68b028f7b39f6046800dc480e7fc42456","name":"kind","text":"restock"},{"size":41,"sha256":"f940ba508633b46231bccfb6598dc721bee6af115b7c186477406102d1c8bb12","name":"sheet","filename":"stock.csv","text":"hammer,2\ntape measure,1\nwall plugs 6mm,4\n"}]}
+(a file field under plain --form switches the request to
+ multipart on its own; the hash matches again)
+
+$ xh --ignore-stdin --multipart POST :18092/echo 'label@fixtures/label.txt;type=text/plain' | jq -c .multipart
+[{"size":41,"sha256":"128c42f6541337643f8d6d63288a5c1ac837232ffdf84827450dd4d511436f3c","name":"label","filename":"label.txt","content_type":"text/plain","text":"BENCH-12 / claw hammer / restock shelf 4\n"}]
+(the ;type= suffix sets the part's content type)

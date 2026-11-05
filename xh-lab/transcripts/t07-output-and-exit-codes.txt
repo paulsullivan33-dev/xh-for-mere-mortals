@@ -1,0 +1,83 @@
+$ xh --ignore-stdin --headers :18092/echo | head -3
+HTTP/1.1 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 05 Nov 2026 09:32:24 GMT
+$ xh --ignore-stdin --body :18092/compact
+{"order":"bench-12","items":[{"name":"claw hammer","qty":2},{"name":"tape measure","qty":1}],"gift":false}
+$ xh --ignore-stdin --quiet :18092/echo; echo "exit=$?"
+exit=0
+
+(the fixture's /compact path sends its JSON as one line;
+ in a pipe the body passes through exactly as sent:)
+
+$ xh --ignore-stdin :18092/compact
+{"order":"bench-12","items":[{"name":"claw hammer","qty":2},{"name":"tape measure","qty":1}],"gift":false}
+$ xh --ignore-stdin --pretty=format :18092/compact
+{
+    "order": "bench-12",
+    "items": [
+        {
+            "name": "claw hammer",
+            "qty": 2
+        },
+        {
+            "name": "tape measure",
+            "qty": 1
+        }
+    ],
+    "gift": false
+}
+$ xh --ignore-stdin --pretty=format --format-options=json.indent:2 :18092/compact | head -5
+{
+  "order": "bench-12",
+  "items": [
+    {
+      "name": "claw hammer",
+
+HEADER ORDER — the friendly view tidies more than the
+body. The server sends Server, then Content-Type, then
+Content-Length (the echo report in t01 shows its side):
+
+$ xh --ignore-stdin --headers :18092/echo        (in a pipe, three runs)
+HTTP/1.1 200 OK
+Server: BaseHTTP/0.6 Python/3.12.3
+Content-Type: application/json
+Content-Length: 403
+(the server's own order, kept)
+
+$ ./pty-run.sh "xh --ignore-stdin --headers :18092/echo" | ./render.sh   (on a terminal, two runs)
+HTTP/1.1 200 OK
+Content-Length: 403
+Content-Type: application/json
+Server: BaseHTTP/0.6 Python/3.12.3
+(sorted alphabetically — Date lines filtered from both
+ runs above for readability; nothing else was changed)
+
+EXIT CODES — in xh 0.25.3 the status check is the DEFAULT
+(--help annotates --check-status "(default)"; turn it off
+ with --no-check-status):
+
+$ xh --ignore-stdin --headers :18092/status/404; echo "exit=$?"
+HTTP/1.1 404 Not Found
+Server: BaseHTTP/0.6 Python/3.12.3
+Date: Thu, 05 Nov 2026 09:31:25 GMT
+Content-Type: application/json
+Content-Length: 64
+
+exit=4
+(and on stderr: xh: warning: HTTP 404 Not Found)
+
+$ xh --ignore-stdin --no-check-status :18092/status/404 >/dev/null; echo "exit=$?"
+exit=0
+$ for p in echo status/404 status/500; do xh --ignore-stdin $B/$p >/dev/null 2>&1; echo "$p -> exit=$?"; done
+echo -> exit=0
+status/404 -> exit=4
+status/500 -> exit=5
+$ xh --ignore-stdin --headers :18092/redirect; echo "exit=$?"
+HTTP/1.1 302 Found
+...
+Location: /echo?via=redirect
+...
+exit=3
+(an unfollowed 3xx counts 3; with --no-check-status the
+ same answer exits 0)

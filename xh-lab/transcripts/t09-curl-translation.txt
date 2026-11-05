@@ -1,0 +1,14 @@
+$ xh --curl --ignore-stdin POST :18092/echo X-Workshop:North-Bench --auth bench:tape items[]=hammer items[]=nails count:=2
+curl -X POST http://127.0.0.1:18092/echo -H 'x-workshop: North-Bench' --basic -u bench:tape -H 'content-type: application/json' -H 'accept: application/json, */*;q=0.5' -d '{"items":["hammer","nails"],"count":2}'
+(--curl prints the command and sends nothing)
+
+$ xh --curl --ignore-stdin POST :18092/echo X-Workshop:North-Bench --auth bench:tape items[]=hammer items[]=nails count:=2 > curl-translation.txt
+$ sh ./curl-translation.txt > curl-response.json
+$ jq -c '{auth: (.headers[]|select(.[0]=="Authorization")|.[1]), ws: (.headers[]|select(.[0]=="X-Workshop")|.[1]), json}' curl-response.json
+{"auth":"Basic YmVuY2g6dGFwZQ==","ws":"North-Bench","json":{"items":["hammer","nails"],"count":2}}
+$ xh --ignore-stdin POST :18092/echo X-Workshop:North-Bench --auth bench:tape items[]=hammer items[]=nails count:=2 | jq -c '{auth: (.headers[]|select(.[0]=="Authorization")|.[1]), ws: (.headers[]|select(.[0]=="X-Workshop")|.[1]), json}'
+{"auth":"Basic YmVuY2g6dGFwZQ==","ws":"North-Bench","json":{"items":["hammer","nails"],"count":2}}
+(identical: the translation delivers the same request —
+ the server cannot tell which tool sent it; note the
+ translation lower-cases the header names, which HTTP
+ treats as the same thing)

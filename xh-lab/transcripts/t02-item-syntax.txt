@@ -1,0 +1,44 @@
+$ xh --ignore-stdin POST :18092/echo X-Workshop:North-Bench size==big name=hammer count:=3 gift:=true note:=null tags[]=red tags[]=heavy dims[width]:=30 dims[unit]=cm
+(server's report, projected with jq)
+{
+  "query": {
+    "size": [
+      "big"
+    ]
+  },
+  "x_workshop": "North-Bench",
+  "json": {
+    "name": "hammer",
+    "count": 3,
+    "gift": true,
+    "note": null,
+    "tags": [
+      "red",
+      "heavy"
+    ],
+    "dims": {
+      "width": 30,
+      "unit": "cm"
+    }
+  }
+}
+
+$ xh --ignore-stdin POST :18092/echo label=@fixtures/label.txt meta:=@fixtures/raw-note.json | jq -c .json
+{"label":"BENCH-12 / claw hammer / restock shelf 4\n","meta":{"order":"bench-12","priority":"high"}}
+(the file's trailing newline comes along in the string;
+ the :=@ file is read as JSON and lands as an object)
+
+$ xh --ignore-stdin POST :18092/echo 'weird\=key=plain' | jq -c .json
+{"weird=key":"plain"}
+
+$ xh --ignore-stdin :18092/echo q=hammer | jq -c '{method, query, json}'
+{"method":"POST","query":{},"json":{"q":"hammer"}}
+(no method named and a data item present — POST is inferred)
+
+$ xh --ignore-stdin GET :18092/echo q=hammer | jq -c '{method, content_type, body_length, json}'
+{"method":"GET","content_type":"application/json","body_length":14,"json":{"q":"hammer"}}
+(an explicit GET keeps = items as a JSON *body*; xh does
+ not move them into the query string)
+
+$ xh --ignore-stdin GET :18092/echo q==hammer 'kind==wall plugs' | jq -c '{method, query_string, query}'
+{"method":"GET","query_string":"q=hammer&kind=wall+plugs","query":{"q":["hammer"],"kind":["wall plugs"]}}

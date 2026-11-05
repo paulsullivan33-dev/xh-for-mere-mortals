@@ -1,0 +1,17 @@
+{
+    "__meta__": {
+        "about": "xh session file",
+        "xh": "0.25.3"
+    },
+    "auth": {
+        "type": "basic",
+        "raw_auth": "bench:tape"
+    },
+    "cookies": [],
+    "headers": [
+        {
+            "name": "x-workshop",
+            "value": "North-Bench"
+        }
+    ]
+}

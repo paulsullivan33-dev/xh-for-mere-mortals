@@ -1,0 +1,16 @@
+$ xh --ignore-stdin http://127.0.0.1:18099/echo; echo "exit=$?"
+xh: error: error sending request for url (http://127.0.0.1:18099/echo)
+
+Caused by:
+    0: client error (Connect)
+    1: tcp connect error
+    2: Connection refused (os error 111)
+exit=1
+(nothing listens on port 18099. A request that cannot
+ be sent at all exits 1, and the error is a chain —
+ read it from the bottom for the plain cause, here
+ "Connection refused")
+
+(a 404 that WAS sent and answered is a different exit
+ code entirely — 4 — because the status check, not the
+ connection, failed; see t07)

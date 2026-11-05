@@ -1,0 +1,36 @@
+WHY EVERY LAB COMMAND CARRIES --ignore-stdin
+
+On a terminal, this is a plain GET (t01, first run):
+    xh http://127.0.0.1:18092/echo
+
+Send the same command with stdin coming from anywhere
+that is not a terminal — a pipe, a file, /dev/null, a
+script — and xh treats stdin as a request body:
+
+$ xh http://127.0.0.1:18092/echo < /dev/null | jq -c '{method, content_type, body_length}'
+{"method":"POST","content_type":"application/json","body_length":0}
+(no method was named, so the "body" — empty stdin —
+ makes it a POST with an empty JSON body; the method
+ stayed GET only when GET was written out, and even
+ then stdin added Content-Type, Content-Length: 0 and
+ Accept: application/json — t01, third run)
+
+$ printf '' | xh POST :18092/echo name=hammer
+xh: error: Request body (from stdin) and request data (key=value) cannot be mixed. Pass --ignore-stdin to ignore standard input.
+(items plus stdin, even EMPTY stdin, are refused —
+ the error names the fix)
+
+$ xh --ignore-stdin POST :18092/echo name=hammer | jq -c '{method, json}'
+{"method":"POST","json":{"name":"hammer"}}
+
+$ printf '{"from":"stdin"}' | xh POST :18092/echo | jq -c .json
+{"from":"stdin"}
+(when stdin is the body you MEAN, it works — plainly,
+ by leaving --ignore-stdin off and naming a method)
+
+One more symptom, from the lab itself: the very first
+lab call left stdin attached to a stream that never
+closed, and xh sat waiting to read it to the end before
+sending anything. It was not hung on the network — it
+was still reading. In scripts: give xh </dev/null or
+--ignore-stdin unless stdin is the body on purpose.

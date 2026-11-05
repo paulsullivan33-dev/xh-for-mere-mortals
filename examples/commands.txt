@@ -1,0 +1,113 @@
+xh — the distilled commands
+====================================================================
+Placeholders: <url> is a URL of yours;
+<file> is a file of yours. In the lab
+the URL is the fixture server on this
+machine, http://127.0.0.1:18092, and
+:18092 is xh's shorthand for it.
+
+FIRST REQUESTS (chapters 3-4)
+--------------------------------------------------------------------
+  xh --version                     # the check every install
+                                   # must pass
+  xh <url>                         # GET, the friendly view on
+                                   # a terminal, body only in a
+                                   # pipe
+  xh :18092/echo                   # :<port> means this machine
+  xh 127.0.0.1:18092/echo          # no scheme — http assumed
+  xhs example.com/echo             # the same binary under the
+                                   # name xhs assumes https
+  xh --headers <url>               # status line and headers,
+                                   # no body (-h works too)
+  xh --body <url>                  # body only (-b)
+  xh --quiet <url>                 # nothing at all — judge by
+                                   # the exit code
+
+THE ITEM SYNTAX (chapter 4)
+--------------------------------------------------------------------
+  xh <url> X-Workshop:North-Bench  # a header (colon, no equals)
+  xh <url> size==big               # a query parameter (==)
+  xh <url> name=hammer             # a JSON string field (=)
+  xh <url> count:=3 gift:=true     # raw JSON values (:=) —
+                                   # numbers, booleans, null
+  xh <url> tags[]=red tags[]=heavy # a JSON array, one item
+                                   # per element
+  xh <url> dims[width]:=30         # a nested object field
+  xh <url> label=@<file>           # the file's text as the
+                                   # value (=@)
+  xh <url> meta:=@<file>           # the file parsed as JSON
+                                   # (:=@)
+  xh <url> 'weird\=key=plain'      # a backslash escapes a
+                                   # separator inside a key
+
+METHODS AND BODIES (chapters 5-6)
+--------------------------------------------------------------------
+  xh POST <url> name=hammer        # a data item with no
+                                   # method means POST anyway
+  xh PUT <url> name=hammer         # name the method before
+  xh PATCH <url> shelf:=5          # the URL when it is not
+  xh DELETE <url>                  # GET or POST
+  xh --raw '{"direct":true}' POST <url>
+                                   # the body exactly as typed
+  cat data.json | xh POST <url>    # piped stdin is the body
+  xh --form POST <url> name=hammer count=3
+                                   # form fields — all values
+                                   # are strings here
+  xh --multipart POST <url> kind=restock label@<file>
+                                   # a file upload (@ after
+                                   # the key, not =@)
+  xh POST <url> 'label@<file>;type=text/plain'
+                                   # set the part's type
+
+AUTH AND SESSIONS (chapters 7-8)
+--------------------------------------------------------------------
+  xh --auth bench:tape <url>       # HTTP basic — user:password
+                                   # (visible in shell history;
+                                   # see chapter 7 for the safer
+                                   # habits)
+  xh --auth-type bearer --auth TOKEN <url>
+                                   # an Authorization: Bearer
+                                   # header
+  xh --session bench --auth bench:tape <url> 'X-Workshop:North-Bench'
+                                   # teach a session once...
+  xh --session bench <url>         # ...then just name it
+  xh --session-read-only bench <url>
+                                   # use it without saving
+                                   # new values into it
+
+OUTPUT, DOWNLOADS, EXIT CODES (chapter 9)
+--------------------------------------------------------------------
+  xh --check-status <url>          # already the default in
+                                   # 0.25.3: exit 3/4/5 for
+                                   # 3xx/4xx/5xx answers
+  xh --no-check-status <url>       # back to always exit 0
+                                   # when a reply arrived
+  xh --pretty=none <url>           # the body exactly as sent
+  xh --pretty=format <url>         # reformat even in a pipe
+  xh --follow <url>                # follow redirects (they
+                                   # are not followed by
+                                   # default)
+  xh --follow --all <url>          # and show every step
+  xh --download <url>              # save under the server's
+                                   # filename (on a terminal)
+  xh --download --output <file> <url>
+                                   # save under your name —
+                                   # the one to use in scripts
+
+SEEING THE REQUEST (chapter 10)
+--------------------------------------------------------------------
+  xh --offline POST <url> name=hammer
+                                   # print the request, send
+                                   # nothing
+  xh --verbose POST <url> name=hammer
+                                   # the request, then the live
+                                   # answer
+  xh --curl POST <url> name=hammer # the curl command that
+                                   # sends the same request
+
+IN SCRIPTS (chapter 11)
+--------------------------------------------------------------------
+  xh --ignore-stdin <url>          # never let a script's
+                                   # stdin become a body
+  xh --quiet <url>; echo $?        # 0, 3, 4, 5 — or 1 when
+                                   # nothing could be sent

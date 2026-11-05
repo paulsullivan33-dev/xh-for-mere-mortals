@@ -1,0 +1,15 @@
+$ xh --ignore-stdin --auth bench:tape :18092/echo | jq -c '{authorization: (.headers[] | select(.[0]=="Authorization") | .[1])}'
+{"authorization":"Basic YmVuY2g6dGFwZQ=="}
+$ echo YmVuY2g6dGFwZQ== | base64 -d
+bench:tape
+(Basic auth is the user and password joined by a colon
+ and base64-encoded — encoding, not encryption)
+
+$ xh --ignore-stdin --auth-type bearer --auth TOKEN :18092/echo | jq -c '{authorization: (.headers[] | select(.[0]=="Authorization") | .[1])}'
+{"authorization":"Bearer TOKEN"}
+(the lab's token is the literal word TOKEN; the header is
+ the word Bearer, a space, and the token exactly as given)
+
+$ xh --ignore-stdin :18092/echo | jq -c '{authorization: ([.headers[] | select(.[0]=="Authorization")] | length)}'
+{"authorization":0}
+(no --auth, no Authorization header at all)

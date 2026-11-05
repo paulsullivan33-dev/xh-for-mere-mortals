@@ -1,0 +1,93 @@
+$ ./pty-run.sh "xh http://127.0.0.1:18092/echo" | ./render.sh
+HTTP/1.1 200 OK
+Content-Length: 403
+Content-Type: application/json
+Date: Thu, 05 Nov 2026 09:30:26 GMT
+Server: BaseHTTP/0.6 Python/3.12.3
+
+{
+    "method": "GET",
+    "path": "/echo",
+    "query": {},
+    "headers": [
+        [
+            "Accept-Encoding",
+            "gzip, deflate, br, zstd"
+        ],
+        [
+            "User-Agent",
+            "xh/0.25.3"
+        ],
+        [
+            "Connection",
+            "keep-alive"
+        ],
+        [
+            "Accept",
+            "*/*"
+        ],
+        [
+            "Host",
+            "127.0.0.1:18092"
+        ]
+    ],
+    "content_type": "",
+    "body_length": 0
+}
+(on a terminal: status line and headers are printed, and
+ the body is re-indented to four spaces — the server sent
+ two-space indent)
+
+$ TERM=xterm-256color ./pty-run.sh "xh http://127.0.0.1:18092/echo" | sed -n '1,3p' | sed -n l
+\033[0m\033[34mHTTP\033[0m/\033[0m\033[34m1.1\033[0m \033[0m\033[34m2\
+00\033[0m \033[0m\033[36mOK\033[0m\r$
+\033[0m\033[36mContent-Length\033[0m:\033[0m \033[0m403\033[0m\r$
+\033[0m\033[36mContent-Type\033[0m:\033[0m \033[0mapplication/json\
+(the status words are blue (34), the OK and the header
+ names cyan (36); every token is wrapped in \033[0m resets)
+
+$ xh GET http://127.0.0.1:18092/echo < /dev/null
+{
+  "method": "GET",
+  "path": "/echo",
+  "query_string": "",
+  "query": {},
+  "headers": [
+    [
+      "Accept-Encoding",
+      "gzip, deflate, br, zstd"
+    ],
+    [
+      "User-Agent",
+      "xh/0.25.3"
+    ],
+    [
+      "Connection",
+      "keep-alive"
+    ],
+    [
+      "Accept",
+      "application/json, */*;q=0.5"
+    ],
+    [
+      "Content-Type",
+      "application/json"
+    ],
+    [
+      "Content-Length",
+      "0"
+    ],
+    [
+      "Host",
+      "127.0.0.1:18092"
+    ]
+  ],
+  "content_type": "application/json",
+  "body_length": 0
+}
+(in a pipe: only the body is printed, in the server's own
+ two-space indent — and compare the request the server
+ reports: the redirected stdin, even empty, has added a
+ JSON Content-Type, a Content-Length of 0, and an Accept
+ of application/json. The terminal run above has none of
+ those. Transcript t12 is about this difference.)

@@ -1,0 +1,12 @@
+$ xh --ignore-stdin PUT :18092/echo name=hammer shelf:=4 | jq -c '{method, json}'
+{"method":"PUT","json":{"name":"hammer","shelf":4}}
+$ xh --ignore-stdin PATCH :18092/echo shelf:=5 | jq -c '{method, json}'
+{"method":"PATCH","json":{"shelf":5}}
+$ xh --ignore-stdin DELETE :18092/echo | jq -c '{method, body_length}'
+{"method":"DELETE","body_length":0}
+$ xh --ignore-stdin --raw '{"direct":true}' POST :18092/echo | jq -c '{method, content_type, json}'
+{"method":"POST","content_type":"application/json","json":{"direct":true}}
+$ printf '{"from":"stdin"}' | xh POST :18092/echo | jq -c '{method, content_type, json}'
+{"method":"POST","content_type":"application/json","json":{"from":"stdin"}}
+$ printf 'name=hammer&count=3' | xh --form POST :18092/echo | jq -c '{method, content_type, form}'
+{"method":"POST","content_type":"application/x-www-form-urlencoded","form":{"name":["hammer"],"count":["3"]}}

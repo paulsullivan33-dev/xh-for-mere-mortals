@@ -1,0 +1,42 @@
+(all runs with XDG_CONFIG_HOME pointed at the lab's xdg
+ folder, so the session lands where the lab can show it)
+
+$ xh --ignore-stdin --session bench --auth bench:tape :18092/echo X-Workshop:North-Bench | jq -c '{auth: (.headers[]|select(.[0]=="Authorization")|.[1]), ws: (.headers[]|select(.[0]=="X-Workshop")|.[1])}'
+{"auth":"Basic YmVuY2g6dGFwZQ==","ws":"North-Bench"}
+$ xh --ignore-stdin --session bench :18092/echo | jq -c '{auth: (.headers[]|select(.[0]=="Authorization")|.[1]), ws: (.headers[]|select(.[0]=="X-Workshop")|.[1])}'
+{"auth":"Basic YmVuY2g6dGFwZQ==","ws":"North-Bench"}
+(the second call names neither the auth nor the header;
+ the server received both — the session supplied them)
+
+$ find $XDG_CONFIG_HOME -type f
+~/workspace/xh-for-mere-mortals/xh-lab/xdg/xh/sessions/127.0.0.1_18092/bench.json
+(on a real machine the same path starts ~/.config/xh —
+ one folder per host, one JSON file per session name)
+
+$ cat .../xh/sessions/127.0.0.1_18092/bench.json
+{
+    "__meta__": {
+        "about": "xh session file",
+        "xh": "0.25.3"
+    },
+    "auth": {
+        "type": "basic",
+        "raw_auth": "bench:tape"
+    },
+    "cookies": [],
+    "headers": [
+        {
+            "name": "x-workshop",
+            "value": "North-Bench"
+        }
+    ]
+}
+(read that raw_auth line twice: the password is stored
+ in clear text — see the sessions chapter)
+
+$ xh --ignore-stdin --session-read-only bench :18092/echo X-Extra:once | jq -c '{extra: ([.headers[]|select(.[0]=="X-Extra")]|length), ws: (.headers[]|select(.[0]=="X-Workshop")|.[1])}'
+{"extra":1,"ws":"North-Bench"}
+$ xh --ignore-stdin --session bench :18092/echo | jq -c '{extra: ([.headers[]|select(.[0]=="X-Extra")]|length)}'
+{"extra":0}
+(read-only sent X-Extra once but did not save it; the
+ next ordinary session call does not carry it)
